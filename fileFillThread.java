@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class fileFillThread extends clientHelperThread
 {
-	private Scanner serverInput;
+
 	private PrintWriter serverOutput;
 	private Socket theSocket;
 
@@ -20,8 +20,6 @@ public class fileFillThread extends clientHelperThread
 		try
 		{
 			System.out.println("Starting to fill array");
-			//ability to read from server
-			this.serverInput = new Scanner(this.theSocket.getInputStream());
 
 			//ability to write to the server
 			this.serverOutput = new PrintWriter(this.theSocket.getOutputStream(),true); 
@@ -46,8 +44,38 @@ public class fileFillThread extends clientHelperThread
 			{
 				System.out.println("Spot found: commence requesting byte at spot: " + i);
 				//****get the byte*****
-				serverOutput.println(i);//ask server to send byte
-				theFileArray[i] = Integer.parseInt(serverInput.nextLine()); //receive byte and enter in array
+				serverOutput.println("Request:" + i);//ask server to send byte
+
+				//receive this message from ReceivedMessages thread
+				int location = -1;
+				boolean requestFound = false;
+				while(!requestFound)//run through until we find a request.
+				{
+					for(int j = 0; j < Driver.messages.size(); j++)
+					{
+						if(Driver.messages.get(j).contains("Response:"))
+						{
+							location = j;
+							j = Driver.messages.size();
+							requestFound = true;
+						}
+					}
+					
+				}
+				String response = Driver.messages.get(location).substring(9);
+				theFileArray[i] = Integer.parseInt(response); //receive byte and enter in array
+
+				boolean successful = false;
+				while(!successful) //loop through until we're able to complete the action
+				{
+					while(!Driver.modifying)
+					{
+						Driver.modifying = true;
+						Driver.messages.remove(location); //remove the message we just used
+						Driver.modifying = false;
+						successful = true;
+					}
+				}
 			}
 		}
 		//once we get to the end of the array, write to disk

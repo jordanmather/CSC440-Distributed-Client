@@ -3,6 +3,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 
@@ -15,6 +16,8 @@ public class ClientCommunicationProtocol
 	private int[] theFileBytes;
 	private fileFillThread fft;
 	private byteRequestThread brt;
+	private ReceivedMessages rm;
+	static LinkedList<String> messages = new LinkedList<String>(); //global list of received messages for all threads
 	
 	public ClientCommunicationProtocol(Socket theServer) throws Exception
 	{
@@ -64,7 +67,8 @@ public class ClientCommunicationProtocol
 		
 		//we only need to spawn a byteRequestThread since we have
 		//all of the bytes already
-		
+		rm = new ReceivedMessages(this.theServer);
+		rm.start();
 		brt = new byteRequestThread(this.theFileBytes, this.theServer);
 		System.out.println("Starting byteRequestThread");
 		brt.start();
@@ -82,9 +86,11 @@ public class ClientCommunicationProtocol
 		//since we are participating in sharing the portion of the
 		//file we have, and we want to fill in the rest of the file
 		//we do not have
-		brt = new byteRequestThread(this.theFileBytes, theServer);
+		rm = new ReceivedMessages(this.theServer);
+		rm.start();
+		brt = new byteRequestThread(this.theFileBytes, this.theServer);
 		brt.start();
-		fft = new fileFillThread(this.theFileBytes, theServer);
+		fft = new fileFillThread(this.theFileBytes, this.theServer);
 		fft.start();
 	}
 	
