@@ -33,7 +33,7 @@ public class ClientCommunicationProtocol
 	private void shareFile() throws Exception
 	{
 		this.serverOutput.println("share");
-		File myFilesDir = new File("./myFiles");
+		File myFilesDir = new File("bin\\myFiles");
 		String[] theFiles = myFilesDir.list();
 		int pos = 0;
 		for(String fn : theFiles)
@@ -46,7 +46,7 @@ public class ClientCommunicationProtocol
 		System.out.println("You chose to share: " + theFiles[Integer.parseInt(theAnswer)]);
 		
 		//Read the file from the client
-		File theFile = new File("./myFiles/" + theFiles[Integer.parseInt(theAnswer)]);
+		File theFile = new File("bin\\myFiles\\" + theFiles[Integer.parseInt(theAnswer)]);
 		FileInputStream fis = new FileInputStream(theFile);
 
 		//let the server know about the file we are about to send
@@ -64,7 +64,9 @@ public class ClientCommunicationProtocol
 		
 		//we only need to spawn a byteRequestThread since we have
 		//all of the bytes already
-		brt = new byteRequestThread(this.theFileBytes);
+		
+		brt = new byteRequestThread(this.theFileBytes, this.theServer);
+		System.out.println("Starting byteRequestThread");
 		brt.start();
 	}
 	
@@ -80,9 +82,9 @@ public class ClientCommunicationProtocol
 		//since we are participating in sharing the portion of the
 		//file we have, and we want to fill in the rest of the file
 		//we do not have
-		brt = new byteRequestThread(this.theFileBytes);
+		brt = new byteRequestThread(this.theFileBytes, theServer);
 		brt.start();
-		fft = new fileFillThread(this.theFileBytes);
+		fft = new fileFillThread(this.theFileBytes, theServer);
 		fft.start();
 	}
 	
